@@ -1,0 +1,62 @@
+# Ignorar node_modules (dependencias de Node.js)
+node_modules/
+
+# Ignorar archivos de entorno (pueden contener información sensible)
+.env
+
+# Ignorar archivos de configuración local
+*.local
+
+# Ignorar archivos de registro y directorios de logs
+*.log
+logs/
+
+# Ignorar archivos de configuración de IDE
+.vscode/
+.idea/
+
+# Ignorar archivos generados por el sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de compilación y dist
+dist/
+build/
+
+# Ignorar archivos de npm
+npm-debug.log*
+
+# Ignorar archivos de yarn
+yarn-debug.log*
+yarn-error.log*
+
+# Ignorar archivos de caché de npm y yarn
+.npm
+.yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Ignorar archivos de configuración de Babel
+.babelrc
+
+# Ignorar archivos de configuración de TypeScript
+tsconfig.json
+*.tsbuildinfo
+
+# Ignorar archivos de configuración de Jest
+jest.config.js
+coverage/
+
+# Ignorar archivos de configuración de ESLint
+.eslintrc.js
+.eslintcache
+
+# Ignorar archivos de configuración de Prettier
+.prettierrc
+.prettierignore
+
+# Ignorar archivos de configuración de Webpack
+webpack.config.js
