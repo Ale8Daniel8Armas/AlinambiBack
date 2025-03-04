@@ -9,8 +9,18 @@ const authRoutes = require("./rutas/routes.js");
 const app = express();
 const port = process.env.PORT || 5000;
 
+// Configuración de CORS
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Permitir solo este origen
+    credentials: true, // Permitir credenciales (si las usas)
+  })
+);
+
+// Manejar solicitudes OPTIONS (preflight)
+app.options("*", cors());
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 // Conexión a MongoDB
