@@ -23,6 +23,10 @@ app.options("*", cors());
 // Middleware
 app.use(express.json());
 
+app.head("/", (req, res) => {
+  res.status(200).end(); // Responde con un 200 OK
+});
+
 // Conexión a MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
