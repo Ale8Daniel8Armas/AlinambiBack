@@ -12,8 +12,9 @@ const port = process.env.PORT || 5000;
 // Configuración de CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // Permitir solo este origen
-    credentials: true, // Permitir credenciales (si las usas)
+    origin: "https://eebfalinambi.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
 );
 
