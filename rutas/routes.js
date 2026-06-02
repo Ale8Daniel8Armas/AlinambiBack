@@ -6,6 +6,7 @@ const teachersMembersController = require("../controlador/docentesPicController.
 const misionController = require("../controlador/misionController.js");
 const visionController = require("../controlador/visionController.js");
 const matriculaController = require("../controlador/matriculaController.js");
+const solicitudIngresoController = require("../controlador/solicitudIngresoController.js");
 
 const { upload } = require("../utils/multerConfig.js");
 
@@ -101,5 +102,13 @@ router.put("/matricula/:id", matriculaController.updateMatriculaById);
 
 // Eliminar matrícula por ID
 router.delete("/matriculaDelete/:id", matriculaController.deleteMatriculaById);
+
+// Rutas para solicitudes de ingreso
+router.post("/solicitud-ingreso", solicitudIngresoController.createSolicitud);
+router.get("/solicitud-ingreso", solicitudIngresoController.getAllSolicitudes);
+router.get("/solicitud-ingreso/estadisticas", solicitudIngresoController.getEstadisticas);
+router.get("/solicitud-ingreso/:id", solicitudIngresoController.getSolicitudById);
+router.put("/solicitud-ingreso/:id/estado", solicitudIngresoController.updateEstado);
+router.delete("/solicitud-ingreso/:id", solicitudIngresoController.deleteSolicitud);
 
 module.exports = router;
