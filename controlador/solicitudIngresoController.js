@@ -1,10 +1,54 @@
 const SolicitudIngreso = require("../modelos/solicitudIngresoModel.js");
+const {
+  correoPendiente,
+  correoRechazado,
+  correoAprobado,
+  enviarEmail,
+} = require("../utils/emailService.js");
+const { generarPdfMatricula } = require("../utils/generatePdf.js");
 
-// Crear nueva solicitud (ruta pública)
+const NIVEL_LABELS = {
+  inicial_1: "Inicial 1 (2-3 años)",
+  inicial_2: "Inicial 2 (3-4 años)",
+  preparatoria: "Preparatoria (1ro EGB)",
+  basica_1: "2do Año EGB",
+  basica_2: "3ro Año EGB",
+  basica_3: "4to Año EGB",
+  basica_4: "5to Año EGB",
+  basica_5: "6to Año EGB",
+  basica_6: "7mo Año EGB",
+  basica_7: "8vo Año EGB",
+};
+
+const URL_MATRICULA =
+  process.env.FRONTEND_URL
+    ? `${process.env.FRONTEND_URL}/formulario-matricula`
+    : "https://eebfalinambi.vercel.app/formulario-matricula";
+
+// ── Crear nueva solicitud (ruta pública) ─────────────────────────────────────
 exports.createSolicitud = async (req, res) => {
   try {
     const solicitud = new SolicitudIngreso(req.body);
     await solicitud.save();
+
+    // Email de confirmación — no bloquea la respuesta si falla
+    const nivel = NIVEL_LABELS[solicitud.nivelSolicitado] || solicitud.nivelSolicitado;
+    const { asunto, html } = correoPendiente({
+      nombres: solicitud.nombres,
+      apellidos: solicitud.apellidos,
+      codigo: solicitud.codigoSolicitud,
+      nivel,
+      anoLectivo: solicitud.anoLectivo,
+    });
+
+    enviarEmail({
+      destinatario: solicitud.emailRepresentante,
+      asunto,
+      html,
+    }).catch((err) =>
+      console.error("Email pendiente no enviado:", err.message)
+    );
+
     res.status(201).json({
       message: "Solicitud enviada correctamente.",
       codigo: solicitud.codigoSolicitud,
@@ -20,7 +64,7 @@ exports.createSolicitud = async (req, res) => {
   }
 };
 
-// Obtener todas las solicitudes (admin)
+// ── Obtener todas las solicitudes (admin) ────────────────────────────────────
 exports.getAllSolicitudes = async (req, res) => {
   try {
     const { estado } = req.query;
@@ -35,7 +79,7 @@ exports.getAllSolicitudes = async (req, res) => {
   }
 };
 
-// Obtener una solicitud por ID (admin)
+// ── Obtener una solicitud por ID (admin) ─────────────────────────────────────
 exports.getSolicitudById = async (req, res) => {
   try {
     const solicitud = await SolicitudIngreso.findById(req.params.id);
@@ -49,18 +93,75 @@ exports.getSolicitudById = async (req, res) => {
   }
 };
 
-// Actualizar estado y observaciones (admin)
+// ── Actualizar estado y observaciones (admin) ────────────────────────────────
 exports.updateEstado = async (req, res) => {
   try {
     const { estado, observaciones } = req.body;
+
     const solicitud = await SolicitudIngreso.findByIdAndUpdate(
       req.params.id,
       { estado, observaciones },
       { new: true, runValidators: true }
     );
+
     if (!solicitud) {
       return res.status(404).json({ error: "Solicitud no encontrada." });
     }
+
+    const nivel =
+      NIVEL_LABELS[solicitud.nivelSolicitado] || solicitud.nivelSolicitado;
+    const datosBase = {
+      nombres: solicitud.nombres,
+      apellidos: solicitud.apellidos,
+      codigo: solicitud.codigoSolicitud,
+      nivel,
+      anoLectivo: solicitud.anoLectivo,
+      observaciones: solicitud.observaciones,
+    };
+
+    // Disparar el email correspondiente según el nuevo estado
+    if (estado === "rechazado") {
+      const { asunto, html } = correoRechazado(datosBase);
+      enviarEmail({
+        destinatario: solicitud.emailRepresentante,
+        asunto,
+        html,
+      }).catch((err) =>
+        console.error("Email rechazo no enviado:", err.message)
+      );
+    }
+
+    if (estado === "aceptado") {
+      try {
+        // Generar PDF de indicaciones de matrícula
+        const pdfBuffer = await generarPdfMatricula({
+          ...datosBase,
+          urlFormularioMatricula: URL_MATRICULA,
+        });
+
+        const { asunto, html } = correoAprobado({
+          ...datosBase,
+          urlFormularioMatricula: URL_MATRICULA,
+        });
+
+        await enviarEmail({
+          destinatario: solicitud.emailRepresentante,
+          asunto,
+          html,
+          adjuntos: [
+            {
+              filename: `Indicaciones_Matricula_${solicitud.codigoSolicitud}.pdf`,
+              content: pdfBuffer,
+              contentType: "application/pdf",
+            },
+          ],
+        });
+      } catch (emailErr) {
+        // El email de aprobación es importante; se loguea pero no bloquea la respuesta
+        console.error("Email aprobación no enviado:", emailErr.message);
+      }
+    }
+
     res.json(solicitud);
   } catch (error) {
     console.error("Error al actualizar estado:", error);
@@ -68,7 +169,7 @@ exports.updateEstado = async (req, res) => {
   }
 };
 
-// Eliminar solicitud (admin)
+// ── Eliminar solicitud (admin) ───────────────────────────────────────────────
 exports.deleteSolicitud = async (req, res) => {
   try {
     const solicitud = await SolicitudIngreso.findByIdAndDelete(req.params.id);
@@ -82,7 +183,7 @@ exports.deleteSolicitud = async (req, res) => {
   }
 };
 
-// Estadísticas rápidas (admin)
+// ── Estadísticas rápidas (admin) ─────────────────────────────────────────────
 exports.getEstadisticas = async (req, res) => {
   try {
     const [total, pendientes, en_revision, aceptados, rechazados] =
