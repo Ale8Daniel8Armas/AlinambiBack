@@ -68,7 +68,7 @@ const plantillaBase = (contenido) => `
 
 // ── Email 1: Solicitud recibida (pendiente) ──────────────────────────────────
 const correoPendiente = ({ nombres, apellidos, codigo, nivel, anoLectivo }) => ({
-  subject: `✅ Solicitud de Ingreso Recibida — ${codigo}`,
+  asunto: `✅ Solicitud de Ingreso Recibida — ${codigo}`,
   html: plantillaBase(`
     <span class="badge badge-pending">⏳ Estado: Pendiente de Revisión</span>
     <h2>¡Hemos recibido tu solicitud!</h2>
@@ -105,7 +105,7 @@ const correoPendiente = ({ nombres, apellidos, codigo, nivel, anoLectivo }) => (
 
 // ── Email 2: Solicitud rechazada ─────────────────────────────────────────────
 const correoRechazado = ({ nombres, apellidos, codigo, nivel, observaciones }) => ({
-  subject: `❌ Solicitud de Ingreso No Aprobada — ${codigo}`,
+  asunto: `❌ Solicitud de Ingreso No Aprobada — ${codigo}`,
   html: plantillaBase(`
     <span class="badge badge-rejected">❌ Estado: Solicitud No Aprobada</span>
     <h2>Resultado de tu solicitud de ingreso</h2>
@@ -145,7 +145,7 @@ const correoAprobado = ({
   anoLectivo,
   urlFormularioMatricula,
 }) => ({
-  subject: `🎉 ¡Solicitud Aprobada! Próximos pasos para la Matrícula — ${codigo}`,
+  asunto: `🎉 ¡Solicitud Aprobada! Próximos pasos para la Matrícula — ${codigo}`,
   html: plantillaBase(`
     <span class="badge badge-approved">🎉 Estado: Solicitud Aprobada</span>
     <h2>¡Felicitaciones! Tu solicitud ha sido aprobada</h2>
