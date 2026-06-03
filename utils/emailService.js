@@ -1,12 +1,20 @@
 const nodemailer = require("nodemailer");
 
 // Transporter configurado con variables de entorno
+// Usa host explícito + puerto 587 (STARTTLS) + IPv4 forzado
+// para evitar el bloqueo de IPv6 y puerto 465 en Render
 const crearTransporter = () =>
   nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,      // STARTTLS (no SSL directo)
+    family: 4,          // forzar IPv4
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 
