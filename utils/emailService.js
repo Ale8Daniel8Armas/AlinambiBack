@@ -1,22 +1,5 @@
-const nodemailer = require("nodemailer");
-
-// Transporter configurado con variables de entorno
-// Usa host explícito + puerto 587 (STARTTLS) + IPv4 forzado
-// para evitar el bloqueo de IPv6 y puerto 465 en Render
-const crearTransporter = () =>
-  nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,      // STARTTLS (no SSL directo)
-    family: 4,          // forzar IPv4
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
+// Render bloquea SMTP saliente (465 y 587) — se usa la API HTTP de Brevo
+// Variables de entorno requeridas: EMAIL_USER (remitente) y BREVO_API_KEY
 
 // ── Plantilla base HTML ──────────────────────────────────────────────────────
 const plantillaBase = (contenido) => `
@@ -205,17 +188,44 @@ const correoAprobado = ({
   `),
 });
 
-// ── Función principal para enviar email ──────────────────────────────────────
+// ── Función principal para enviar email vía API HTTP de Brevo ────────────────
+// Usa fetch nativo (Node 18+) — no requiere paquetes adicionales
 const enviarEmail = async ({ destinatario, asunto, html, adjuntos = [] }) => {
-  const transporter = crearTransporter();
-  const info = await transporter.sendMail({
-    from: `"Admisiones EEBF Aliñambi" <${process.env.EMAIL_USER}>`,
-    to: destinatario,
+  const body = {
+    sender: {
+      name: "Admisiones EEBF Aliñambi",
+      email: process.env.EMAIL_USER,
+    },
+    to: [{ email: destinatario }],
     subject: asunto,
-    html,
-    attachments: adjuntos,
+    htmlContent: html,
+  };
+
+  // Adjuntos: Brevo los espera en base64
+  if (adjuntos.length > 0) {
+    body.attachment = adjuntos.map((adj) => ({
+      name: adj.filename,
+      content: Buffer.isBuffer(adj.content)
+        ? adj.content.toString("base64")
+        : Buffer.from(adj.content).toString("base64"),
+    }));
+  }
+
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
   });
-  return info;
+
+  if (!res.ok) {
+    const detalle = await res.text();
+    throw new Error(`Brevo ${res.status}: ${detalle}`);
+  }
+
+  return res.json();
 };
 
 module.exports = {
