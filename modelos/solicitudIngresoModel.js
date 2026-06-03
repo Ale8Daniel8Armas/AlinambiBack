@@ -97,6 +97,10 @@ const solicitudIngresoSchema = new mongoose.Schema({
   },
   observaciones: { type: String, trim: true, default: "" },
   fechaSolicitud: { type: Date, default: Date.now },
+
+  // ── Identificación de formulario formal de matrícula ─────────────
+  esFormularioMatricula: { type: Boolean, default: false },
+  referenciaCodigoSolicitud: { type: String, trim: true, default: "" },
 });
 
 // Genera código secuencial SOL-YYYY-NNNN antes de guardar
