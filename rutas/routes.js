@@ -107,6 +107,7 @@ router.delete("/matriculaDelete/:id", matriculaController.deleteMatriculaById);
 router.post("/solicitud-ingreso", solicitudIngresoController.createSolicitud);
 router.get("/solicitud-ingreso", solicitudIngresoController.getAllSolicitudes);
 router.get("/solicitud-ingreso/estadisticas", solicitudIngresoController.getEstadisticas);
+router.get("/solicitud-ingreso/verificar/:codigo", solicitudIngresoController.verificarCodigo);
 router.get("/solicitud-ingreso/:id", solicitudIngresoController.getSolicitudById);
 router.put("/solicitud-ingreso/:id/estado", solicitudIngresoController.updateEstado);
 router.delete("/solicitud-ingreso/:id", solicitudIngresoController.deleteSolicitud);

@@ -169,6 +169,32 @@ exports.updateEstado = async (req, res) => {
   }
 };
 
+// ── Verificar código (público) — devuelve solo datos mínimos para pre-llenar ─
+exports.verificarCodigo = async (req, res) => {
+  try {
+    const { codigo } = req.params;
+    const solicitud = await SolicitudIngreso.findOne({
+      codigoSolicitud: codigo.toUpperCase(),
+      estado: "aceptado",
+      esFormularioMatricula: { $ne: true },
+    }).select(
+      "codigoSolicitud nombres apellidos cedula fechaNacimiento genero " +
+      "nivelSolicitado anoLectivo nombresRepresentante apellidosRepresentante " +
+      "cedulaRepresentante celularRepresentante emailRepresentante " +
+      "parentescoRepresentante nombreEmergencia parentescoEmergencia telefonoEmergencia"
+    );
+    if (!solicitud) {
+      return res.status(404).json({
+        error: "Código no encontrado o la solicitud no está aprobada.",
+      });
+    }
+    res.json(solicitud);
+  } catch (error) {
+    console.error("Error al verificar código:", error);
+    res.status(500).json({ error: "Error al verificar el código." });
+  }
+};
+
 // ── Eliminar solicitud (admin) ───────────────────────────────────────────────
 exports.deleteSolicitud = async (req, res) => {
   try {
